@@ -394,6 +394,20 @@ class RequisiteParseTree():
               
         return True
 
+    def has_subject(self, course):
+        course_info = course.split(' ')
+
+        # Length 1: must be code
+        if len(course_info) == 1:
+            return False
+        
+        # First digit is a number: must be code
+        # print('RequisiteParseNodeCourse', self.course, course_info)
+        if course_info[0][0] in '0123456789':
+            return False
+
+        return True
+
     ### --------------------------------- End Procesing Functions
 
     #####################
@@ -759,13 +773,15 @@ class RequisiteParseTree():
         print('seventh_level_split - requisites_split_and_or:', requisites_split_and_or)
         print('seventh_level_split - AND_OR_list:', AND_OR_list)
 
-        if all(operator == AND_OR_list[0] for operator in AND_OR_list):
+        if len(AND_OR_list) == 0:
+            seventh_level_node = self.seventh_level_v2_split(requisite_cleaned)
+        elif all(operator == AND_OR_list[0] for operator in AND_OR_list):
             if AND_OR_list[0] == 'and':
                 seventh_level_node = RequisiteParseNodeAND()
             elif AND_OR_list[0] == 'or':
                 seventh_level_node = RequisiteParseNodeOR()
             else:
-                raise ValueError('seventh_level_split - Unknown operator:', operator, AND_OR_list)
+                raise ValueError('seventh_level_split - Unknown operator:', AND_OR_list[0], AND_OR_list)
             
             for requisite in requisites_split_and_or:
                 requisite_cleaned = requisite.strip()
@@ -779,8 +795,16 @@ class RequisiteParseTree():
                 else:
                     seventh_level_reference_node = self.seventh_level_v2_split(requisite_cleaned)
                 seventh_level_node.append(seventh_level_reference_node)
+            
+            
+            # seventh_level_node.children = seventh_level_node.children[::-1]
         else:
             # raise ValueError('TODO: mixed contents in bracket for seventh_level_split - operators:', AND_OR_list, requisites_split_and_or)
+            
+            # Reverse order to children to maintain sentence structure for subject inference
+            # EDIT: screws up operators order.
+            # AND_OR_list = AND_OR_list[::-1]
+            # requisites_split_and_or = requisites_split_and_or[::-1]
 
             operator = AND_OR_list[0]
             if operator == 'or':
@@ -795,6 +819,17 @@ class RequisiteParseTree():
             previous_node.append(seventh_level_reference_node)
             seventh_level_reference_node = self.seventh_level_v2_split(requisites_split_and_or[1])
             previous_node.append(seventh_level_reference_node)
+            
+            # Subject inference Partial
+            previous_subject = None
+            for i, requisite in enumerate(requisites_split_and_or):
+                if self.likely_is_course(requisite):
+                    if self.has_subject(requisite):
+                        course_info = requisite.split(' ')
+                        previous_subject = course_info[0]
+                    else:
+                        assert previous_subject is not None
+                        requisites_split_and_or[i] = '%s %s' % (previous_subject, requisite)
 
             # Then loop
             for operator, requisite in zip(AND_OR_list[1:], requisites_split_and_or[2:]):
@@ -814,7 +849,9 @@ class RequisiteParseTree():
             
             seventh_level_node = requisite_node
             # Reverse order to children to maintain sentence structure for subject inference
-            seventh_level_node.children = seventh_level_node.children[::-1]
+            # print('seventh_level_split - seventh_level_node.children:', seventh_level_node.children)
+            # seventh_level_node.children = seventh_level_node.children[::-1]
+            # print('seventh_level_split - seventh_level_node.children:', seventh_level_node.children)
 
         # ------------------------------------------
         # seventh_level_reference_node = self.seventh_level_split(requisite_cleaned)
@@ -1034,7 +1071,10 @@ if __name__ == '__main__':
     # requisites = 'CHEM 1AA3, HTHSCI 1I06 A/B; and HTHSCI 2D06 A/B, 2E03 or registration in Level II of the B.H.Sc. (Honours) Specializations or registration in Level II or above of the Chemical Engineering and Bioengineering or Electrical and Biomedical Engineering'
 
     # requisites = 'Registration in Level IV of the B.H.Sc. (Honours) program or registration in Level IV of the B.H.Sc. (Honours) Specializations'
+
+    # One of ... and case might be wrong.
     # requisites = 'One of GEOG 2RC3, 2RU3, 2RW3, and registration in Level III or above. Completion of GEOG 1HA3 or 1HB3 is recommended.'
+
     # requisites = 'Registration in Level III Mechanical Engineering, Mechanical Engineering Co-op (B.Eng.); or Level IV Mechanical Engineering and Management, Mechanical Engineering and Management Co-op (B.Eng.Mgt.) or Mechanical Engineering and Society, Mechanical Engineering and Society Co-op (B.Eng.Society)'
     # requisites = 'ENGINEER 2Q04 or MECHENG 2Q04 or 2QA4 and registration in any Mechanical Engineering or Mechatronics program'
     # requisites = 'Both MATH 2M03 and 2MM3 (or 2M06), or both MATH 2Z03 and 2ZZ3, or both MATH 2P04 and 2Q04; and registration in any Mechanical Engineering program'
@@ -1058,14 +1098,17 @@ if __name__ == '__main__':
     # requisites = 'Registration in Level IV Honours Chemical Biology (B.Sc.) and permission of the Department; students are responsible for securing a suitable Project Supervisor, and are required to submit an application by March 31st of the academic year prior to registration; students are expected to have a Grade Point Average of at least 7.0'
     # requisites = 'PHYSICS 2D03 or 2E03; and one of ENGPHYS 2A03, 2A04, PHYSICS 2A03, 2B06, 2BB3; PHYSICS 2G03 is strongly recommended'
     # requisites = 'Credit or registration in MATH 3C03, and one of ENGPHYS 2QM3, PHYSICS 2C03, 3M03; or registration in Honours Mathematics and Physics (B.Sc.)'
-    requisites = 'Both MATH 1ZB3 and 1ZC3; or 1ZZ5; or both 1AA3 and 1B03; or both 1H03 and 1NN3'
-    requisites = 'One of SFWRENG 2MX3 or 3MX3'
-    requisites = 'One of ENGPHYS 2E04, SFWRENG 2DA3 or 2DA4; and registration in Level 2 or above of a Mechatronics or Software Engineering - Embedded Systems, Software Engineering - Embedded Systems Co-op (B.Eng.) program'
-    requisites = 'One of ENGINEER 2M04, 2MM3 or 3M03'
+    # requisites = 'Both MATH 1ZB3 and 1ZC3; or 1ZZ5; or both 1AA3 and 1B03; or both 1H03 and 1NN3'
+    # requisites = 'One of SFWRENG 2MX3 or 3MX3'
+    # requisites = 'One of ENGPHYS 2E04, SFWRENG 2DA3 or 2DA4; and registration in Level 2 or above of a Mechatronics or Software Engineering - Embedded Systems, Software Engineering - Embedded Systems Co-op (B.Eng.) program'
+    # requisites = 'One of ENGINEER 2M04, 2MM3 or 3M03'
 
     # wtf it actually works?
-    requisites = 'MECHENG 4R03, MECHTRON 3DX4, ELECENG 3CL4 or SFWRENG 3DX4 and registration in any Mechanical Engineering, Mechatronics Engineering or Electrical Engineering program'
-    requisites = 'MECHENG 4R03, MECHTRON 3DX4, ELECENG 3CL4 and SFWRENG 3DX4 and registration in any Mechanical Engineering, Mechatronics Engineering or Electrical Engineering program'
+    # requisites = 'MECHENG 4R03, MECHTRON 3DX4, ELECENG 3CL4 or SFWRENG 3DX4 and registration in any Mechanical Engineering, Mechatronics Engineering or Electrical Engineering program'
+    # requisites = 'MECHENG 4R03, MECHTRON 3DX4, ELECENG 3CL4 and SFWRENG 3DX4 and registration in any Mechanical Engineering, Mechatronics Engineering or Electrical Engineering program'
+
+
+    # requisites = 'ENGINEER 2Q04 or MECHENG 2Q04 or 2QA4 and registration in Level IV or above of any Mechanical Engineering or Mechatronics Engineering program'
 
     # https://academiccalendars.romcmaster.ca/preview_program.php?catoid=24&poid=14359
     # requisites = 'ECON 2G03 or 2X03; and 2H03; and 2B03 or one of CHEMENG 4C03, COMMERCE 2QA3, POLSCI 3N06 A/B, 3NN3, PNB 2XE3, 3XE3, SOCSCI 2J03, SOCIOL 3H06 A/B, STATS 2D03 or another course that is approved by a departmental counselor as equivalent to ECON 2B03 and enrolment in an Honours Economics program'
