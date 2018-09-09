@@ -381,6 +381,8 @@ class RequisiteParseTree():
             # Length ignoring punctuation
             requisite = requisite.replace('.', '')
             requisite = requisite.replace(',', '')
+            requisite = requisite.replace(')', '')
+            requisite = requisite.replace('(', '')
             if len(requisite) <= 3:
                 continue
             
@@ -388,7 +390,7 @@ class RequisiteParseTree():
                 if requisite[0].isdigit() and requisite[3].isdigit() and requisite[1].isupper():
                     return False
 
-            if len(requisite) == 4:
+            if len(requisite) == 5:
                 if requisite[0].isdigit() and requisite[3].isdigit() and requisite[4].isdigit() and requisite[1].isupper():
                     return False
               
