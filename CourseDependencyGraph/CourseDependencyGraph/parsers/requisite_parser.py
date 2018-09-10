@@ -1115,6 +1115,7 @@ if __name__ == '__main__':
     # https://academiccalendars.romcmaster.ca/preview_program.php?catoid=24&poid=14359
     # requisites = 'ECON 2G03 or 2X03; and 2H03; and 2B03 or one of CHEMENG 4C03, COMMERCE 2QA3, POLSCI 3N06 A/B, 3NN3, PNB 2XE3, 3XE3, SOCSCI 2J03, SOCIOL 3H06 A/B, STATS 2D03 or another course that is approved by a departmental counselor as equivalent to ECON 2B03 and enrolment in an Honours Economics program'
 
+    requisites = 'ARTSSCI 1D06 A/B , MATH 1AA3 , 1LT3 , 1N03, 1NN3, 1XX3 , 1ZZ5'
 
     """
     'CHEM 2PC3; or MATH 1B03 and CHEM 1AA3 and one of MATH 1AA3, 1LT3, 1XX3, 1ZB3; or MATH 1B03 and ISCI 1A24 A/B'
