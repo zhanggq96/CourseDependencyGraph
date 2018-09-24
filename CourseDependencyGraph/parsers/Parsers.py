@@ -130,7 +130,7 @@ class RequisitesHTMLParser():
             # print(requisite_type, requisite)
             if requisite_type in requisites_dict_raw:
                 # print('Current requisite:', requisite_type, requisite)
-                rpt = RequisiteParseTree(requisite, verbose=False)
+                rpt = RequisiteParseTree(requisite, verbose=False, course_code=course_code)
                 rpts[requisite_type] = rpt
                 requisite_processed = rpt.process()
                 requisites_dict_processed[requisite_type] = requisite_processed

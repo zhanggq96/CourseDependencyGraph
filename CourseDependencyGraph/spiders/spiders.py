@@ -36,7 +36,7 @@ class AcademicCalenderSpider(scrapy.Spider):
         # new 3dq5
         # course_code_init = course_code_end = 177737 + 5
 
-        # course_code_init = course_code_end = 177148
+        # course_code_init = course_code_end = 178767
         
         url_base = 'https://academiccalendars.romcmaster.ca/preview_course_nopop.php?catoid=32&coid='
         

@@ -186,7 +186,6 @@ class RequisiteParseTree():
     # e.g. 'credit or registration in one of' must come before 'credit or registration in'
     prefixes = [
         'one of',
-        'all of',     # Artificial
         'either',
         'credit or registration in one of',
         'credit or registration in',
@@ -196,11 +195,15 @@ class RequisiteParseTree():
         'registration | credit in',
         'credit or enrolment in',
         'credit | enrolment in',
+        'all of',     # Artificial
         'registration in',
         'completion of',
         'both',
         'including',
     ]
+    OR_prefixes = {'one of', 'either', 'credit or registration in one of', 'credit | registration in one of',
+                   'registration or credit in one of', 'registration | credit in one of'}
+
     suffixes = [
         'is recommended',
         'is strongly recommended',
@@ -227,6 +230,8 @@ class RequisiteParseTree():
         'department'
     ]
     replace_dict = {
+        ' or, ': ' or , ',
+
         'credit or registration in one of': 'credit | registration in one of',
         'credit or registration in': 'credit | registration in',
         'registration or credit in': 'registration | credit in',
@@ -259,14 +264,20 @@ class RequisiteParseTree():
         'MATH 2Z03 and 2ZZ3': 'MATH 2Z03, MATH 2ZZ3', # Causes way too many problems
         'CHEM2OA3': 'CHEM 2OA3',
         'CIVENG 3G03 or 3G04': 'CIVENG 3G03, CIVENG 3G04',
+
+        # changed unit courses
+        'ELECENG 3TP4 or 3TP3': 'ELECENG 3TP3',
+        'ELECENG 3TQ4 or 3TQ3': 'ELECENG 3TQ3',
+        'COMPENG 3DQ4 or 3DQ5': 'COMPENG 3DQ5',
         # 'A/Band': 'A/B and',
         # 'A/Bor': 'A/B or'
         # 'both ': 'one of ',
         # 'Both ': 'one of ',
     }
-    def __init__(self, requisites, verbose=False):
+    def __init__(self, requisites, verbose=False, course_code=None):
         self.requisites = requisites
         self.verbose = verbose
+        self.course_code = course_code
 
     def __repr__(self):
         return str('ROOT:[%s]' % (self.root))
@@ -359,6 +370,10 @@ class RequisiteParseTree():
         split = re.split(r'\.(?![^(]*\))', requisite)
         return split
 
+    def split_on_comma(self, requisite):
+        split = re.split(r',|\[comma\]', requisite)
+        return split
+
     def split_on_AND_OR_and_return_which(self, requisite):
         # Important to include these spaces
         # Do not split on anything inside brackets?:
@@ -391,7 +406,7 @@ class RequisiteParseTree():
                 try:
                     if requisite.lower()[c:c+3] == 'and':
                         # next and found: break, don't keep searching.
-                        requisite = requisite[:c] + ', ' + requisite[c+3:]
+                        requisite = requisite[:c] + '[comma] ' + requisite[c+3:]
                         break
                 except IndexError:
                     break
@@ -500,8 +515,27 @@ class RequisiteParseTree():
         requisite_cleaned = re.sub(r'([A-Z]+) ([A-Z]+)', r'\1\2', requisite_cleaned)
         # Treat a units obtained requirement as an OR requirement
         requisite_cleaned = re.sub(r'[A-Za-z0-9]+ units from', 'one of', requisite_cleaned)
-        requisite_cleaned = re.sub(r'[aA] grade of at least [a-dA-D][\+-]* in', '', requisite_cleaned)
+        requisite_cleaned = re.sub(r'[aA] grade of [at least ]?[a-dA-D][\+-]* in', '', requisite_cleaned)
+        requisite_cleaned = re.sub(r'Students in (.*)at least [A-D][-+] in one of', 'one of', requisite_cleaned)
         
+        # One of A, B, C or D pattern to
+        # One of A, B, C, D
+        or_list_pattern = re.compile(r'([credit or registration in ]*one of (([A-Z]+ )?[1-5][A-Z][A-Z0-9][0-9]+( A/B)?, )*((([A-Z]+ )?)*[1-5][A-Z][A-Z0-9][0-9]+( A/B)?)*) or (([A-Z]+ )?[1-5][A-Z][A-Z0-9][0-9]+( A/B)?)')
+        requisites_list = or_list_pattern.findall(requisite_cleaned)
+
+        for i, found_pattern in enumerate(requisites_list):
+            pattern_start = found_pattern[0]
+            pattern_end = found_pattern[8]
+            requisite_pattern_cleaned = ','.join([pattern_start, pattern_end])
+
+            ps = requisite_cleaned.find(pattern_start)
+            pe = requisite_cleaned[ps+len(pattern_start):].find(pattern_end) + ps+len(pattern_start) + len(pattern_end)
+            # s = requisite_cleaned[ps:pe]
+            requisite_cleaned = requisite_cleaned[:ps] + requisite_pattern_cleaned + requisite_cleaned[pe:]
+
+            print('requisite_pattern_cleaned', requisite_pattern_cleaned)
+            break # only allow once
+
         for word, replacement in RequisiteParseTree.replace_dict.items():
             requisite_cleaned = requisite_cleaned.replace(word, replacement)
 
@@ -744,7 +778,7 @@ class RequisiteParseTree():
         # if prefix is not None:
         #     print('sixth_level_split - prefix', prefix)
         #     print('seventh_level_reference_node', seventh_level_reference_node)
-        if prefix is not None and prefix.lower() in {'one of', 'either', 'including'}:
+        if prefix is not None and prefix.lower() in RequisiteParseTree.OR_prefixes:
             # for i, child in enumerate(seventh_level_reference_node.children):
             #     for j, grandchild in enumerate(child.children):
             #         seventh_level_reference_node.children[i].children[j] =  RequisiteParseNodeOR.from_unknown(grandchild)
@@ -772,23 +806,6 @@ class RequisiteParseTree():
         requisite_cleaned = requisite_string
         # print('sixth level - requisite_string', requisite_string)
         seventh_level_node = None
-
-        # ending_brackets_text, requisite_cleaned = \
-        #     self.find_ending_brackets_and_replace_text_course(requisite_string)
-        # ending_brackets_node = None
-        # if ending_brackets_text:
-        #     requisites_split, AND_OR_list = self.split_on_AND_OR_and_return_which(ending_brackets_text)
-        #     print('sixth_level_split - ending_brackets_text:', ending_brackets_text)
-        #     print('sixth_level_split - requisites_split:', requisites_split)
-        #     if all(operator == 'and' for operator in AND_OR_list):
-        #         ending_brackets_node = RequisiteParseNodeAND()
-        #         ending_brackets_node.extend(requisites_split)
-        #     elif all(operator == 'or' for operator in AND_OR_list):
-        #         ending_brackets_node = RequisiteParseNodeOR()
-        #         ending_brackets_node.extend(requisites_split)
-        #     else:
-        #         raise ValueError('TODO: mixed contents in bracket for postprocess - operators:', 
-        #         AND_OR_list)
 
         # ------------------------------------------
         # Make sure to split on boundaries, don't want to split inside a word
@@ -818,13 +835,15 @@ class RequisiteParseTree():
                 
                 # print('seventh_level_split - unlikely to be course')
                 continue
-            if ',' not in requisite or ',' in requisites_split_and_or[i+1][:-1]:
+            if ',' not in requisite or ',' in requisites_split_and_or[i+1]:
                 # Ensure comma is middle, not last with the [:-1]?
                 # ex. Credit or registration in one of CHEMBIO 2OA3, CHEM 2BA3 or 2OA3, and registration ...
+
+                # another case: One of PSYCH 1F03 or 1X03 , and PSYCH 1XX3 ,
                 continue
             prefix, p = self.find_prefix(requisite)
             # print('seventh_level_split - prefix', prefix)
-            if prefix is not None and prefix not in {'one of', 'including', 'credit | registration in one of'}:
+            if prefix is not None:
                 # Should include "one of" or not?
                 continue
 
@@ -935,7 +954,7 @@ class RequisiteParseTree():
             previous_subject = None
             for i, requisite in enumerate(requisites_split_and_or):
                 if self.likely_is_course(requisite):
-                    print('seventh_level_split inference:', requisites_split_and_or, requisite, previous_subject)
+                    # print('seventh_level_split inference:', requisites_split_and_or, requisite, previous_subject)
                     if self.has_subject(requisite):
                         course_info = requisite.split(' ')
                         previous_subject = course_info[0]
@@ -998,7 +1017,7 @@ class RequisiteParseTree():
         # It will be evaluated either on this level or the sixth level above.
         # if prefix is not None:
         #     print('seventh_level_split - prefix', prefix)
-        if prefix is not None and prefix.lower() in {'one of', 'either', 'including'}:
+        if prefix is not None and prefix.lower() in RequisiteParseTree.OR_prefixes:
             seventh_level_v2_node = self.dfs_replace_unknown_identifier(seventh_level_reference_node, RequisiteParseNodeOR, identifier='comma_identifier')
 
             # seventh_level_v2_node = RequisiteParseNodeOR()
@@ -1027,7 +1046,7 @@ class RequisiteParseTree():
         eighth_level_node = RequisiteParseNodeUNKNOWN()
         eighth_level_node.identifier = 'comma_operator'
 
-        requisites = requisite_string.split(',')
+        requisites = self.split_on_comma(requisite_string)
         # print('eighth_level_split - requisites:', requisites)
 
         for requisite in requisites:
@@ -1245,7 +1264,7 @@ if __name__ == '__main__':
     # requisites = 'ENGINEER 2Q04 or MECHENG 2Q04 or 2QA4 and registration in Level IV or above of any Mechanical Engineering or Mechatronics Engineering program'
 
     # https://academiccalendars.romcmaster.ca/preview_program.php?catoid=24&poid=14359
-    requisites = 'ECON 2G03 or 2X03; and 2H03; and 2B03 or one of CHEMENG 4C03, COMMERCE 2QA3, POLSCI 3N06 A/B, 3NN3, PNB 2XE3, 3XE3, SOCSCI 2J03, SOCIOL 3H06 A/B, STATS 2D03 or another course that is approved by a departmental counselor as equivalent to ECON 2B03 and enrolment in an Honours Economics program'
+    # requisites = 'ECON 2G03 or 2X03; and 2H03; and 2B03 or one of CHEMENG 4C03, COMMERCE 2QA3, POLSCI 3N06 A/B, 3NN3, PNB 2XE3, 3XE3, SOCSCI 2J03, SOCIOL 3H06 A/B, STATS 2D03 or another course that is approved by a departmental counselor as equivalent to ECON 2B03 and enrolment in an Honours Economics program'
 
     # requisites = 'ARTSSCI 1D06 A/B , MATH 1AA3 , 1LT3 , 1N03, 1NN3, 1XX3 , 1ZZ5'
     # requisites = 'Three units of Anthropology and registration in Level II or above in any program. ANTHROP 2PA3  is strongly recommended.'
@@ -1262,7 +1281,7 @@ if __name__ == '__main__':
     # requisites = 'ART 3TS3, ART 3GS3, or ART 3GS6 A/B and registration in Level IV Honours Studio Art program'
     # # requisites = 'ART 3TS3, ART 3GS3, and ART 3GS6 A/B and registration in Level IV Honours Studio Art program'
 
-    # requisites = 'CHEMENG 2O04 (or CHEMENG 3O04), CHEMENG 3D03 and credit or registration in CHEMENG 3A04 (or CHEMENG 2A04)'
+    requisites = 'CHEMENG 2O04 (or CHEMENG 3O04), CHEMENG 3D03 and credit or registration in CHEMENG 3A04 (or CHEMENG 2A04)'
     # requisites = 'MATH 2Z03 and 2ZZ3, and registration or credit in CHEMENG 2F04 and 3D03, or permission of the Department'
     
     # requisites = 'CHEM 2E03, 2OC3, CHEMBIO 2OA3 '
@@ -1277,22 +1296,35 @@ if __name__ == '__main__':
     # requisites = 'AUTOTECH 3MP3, 4AE3, 4EC3, 4MS3, 4TR1, ENGTECH 4EE0, and registration in level IV of the Automotive and Vehicle Engineering Technology program.'
 
     # requisites = 'Credit or registration in one of CHEMBIO 2OA3, CHEM 2BA3 or 2OA3, and registration in Honours Biochemistry (B.Sc.), Honours Chemical Biology (B.Sc.) or Honours Molecular Biology and Genetics (B.Sc.); or registration in Honours Biophysics (B.Sc.) or Honours Medical and Biological Physics (B.Sc.)'
-    requisites = 'BIOCHEM 2B03, credit or registration in one of CHEMBIO 2OB3, CHEM 2BB3 or 2OB3, and registration in Honours Biochemistry (B.Sc.), Honours Chemical Biology (B.Sc.) or Honours Molecular Biology and Genetics (B.Sc.); or BIOCHEM 2B03 and registration in Honours Arts & Science and Biochemistry or Honours Biophysics (B.Sc.) or Honours Medical and Biological Physics (B.Sc.)'
+    # requisites = 'BIOCHEM 2B03, credit or registration in one of CHEMBIO 2OB3, CHEM 2BB3 or 2OB3, and registration in Honours Biochemistry (B.Sc.), Honours Chemical Biology (B.Sc.) or Honours Molecular Biology and Genetics (B.Sc.); or BIOCHEM 2B03 and registration in Honours Arts & Science and Biochemistry or Honours Biophysics (B.Sc.) or Honours Medical and Biological Physics (B.Sc.)'
     
     # requisites = ' ART 3GS3 or ART 3GS6 A/Band registration in Level IV Honours Studio Art program'
     # requisites = 'ART 3TS3, ART 3GS3, or ART 3GS6 A/Band registration in Level IV Honours Studio Art program'
     # requisites = 'One of CLASSICS 1B03,  1M03,2K03, 2LC3,  2LD3, or CLASSICS 3Q03; and registration in Level II or above any program'
-    requisites = 'Three units from CLASSICS 1B03 , 2D03 , 2E03 , 2Y03, 2YY3 ; and registration in Level II or above of any program'
+    # requisites = 'Three units from CLASSICS 1B03 , 2D03 , 2E03 , 2Y03, 2YY3 ; and registration in Level II or above of any program'
 
     # requisites = 'CIVENG 3G03 or 3G04 , 3J04 or registration in CIVENG 4N04'
 
-    requisites = ' ECON 1B03 and registration in any Commerce, Engineering and Management or Honours Business Informatics program; or a grade of at least B+ in one of ARTSSCI 2E03 , ECON 1B03 , 2G03 , 2X03 , and registration in any four or five-level non-Commerce program.'
+    # requisites = ' ECON 1B03 and registration in any Commerce, Engineering and Management or Honours Business Informatics program; or a grade of at least B+ in one of ARTSSCI 2E03 , ECON 1B03 , 2G03 , 2X03 , and registration in any four or five-level non-Commerce program.'
     
-    requisites = 'CHEM 1A03 (or 1E03 ) and 1AA3 ; or ISCI 1A24 A/B ; and one of 2OA3 , 2OC3 , CHEMBIO 2OA3'
+    # requisites = 'CHEM 1A03 (or 1E03 ) and 1AA3 ; or ISCI 1A24 A/B ; and one of 2OA3 , 2OC3 , CHEMBIO 2OA3'
 
-    requisites = ' One of SOCIOL 3FF3 , 3H06 A/B and enrolment in Level IV of any Honours Sociology program and permission of the instructor'
+    # requisites = ' One of SOCIOL 3FF3 , 3H06 A/B and enrolment in Level IV of any Honours Sociology program and permission of the instructor'
     
-    requisites = ' Registration in Level III or above of a Communication Studies or Political Science program; or POLSCI 1AA3 and 1AB3 or 1G06 and registration in Level III or above of the Honours Social Psychology (B.A.) program'
+    # requisites = ' Registration in Level III or above of a Communication Studies or Political Science program; or POLSCI 1AA3 and 1AB3 or 1G06 and registration in Level III or above of the Honours Social Psychology (B.A.) program'
+
+    # requisites = ' A grade of A- in both PSYCH 1X03 (or 1F03 ) and PSYCH 1XX3 or ISCI 1A24 A/B ; and registration in Level III or IV of an Honours program; and permission of the instructor/coordinator'
+    # requisites = ' One of PSYCH 1F03 or 1X03 , and PSYCH 1XX3 , and one of ARTSSCI 2R03 , COMMERCE 2QA3 , ECON 2B03 , HTHSCI 2A03 , KINESIOL 3C03, LINGUIST 2DD3 , PNB 2XE3 , SOCSCI 2J03 , STATS 2B03 , 2D03 , or credit or registration in HUMBEHV 3HB3 , and registration in Level III or above; or registration in Level III or IV of an ISCI program or B.H.Sc. (Honours) program'
+    # requisites = 'credit | registration in one of CHEMBIO 2OB3, CHEM 2BB3,2OB3,'
+    
+    requisites = ' SOCWORK 2B06 or, both SOCWORK 2BB3 and SOCWORK 2CC3 ; and 2A06 A/B or, both SOCWORK 2C03 and SOCWORK 2D03; and permission of the Department'
+    requisites = ' One of SOCIOL 1Z03 , 1A06 A/B and enrollment in Level II or above'
+    requisites = ' Registration in a Social Work or Labour Studies program; or SOCWORK 1AA3 or 1BB3 ; and registration in Level III or above of any program'
+    
+    
+    requisites = ' One of LIFESCI 1E03 , MEDPHYS 1E03, MEDRADSC 1C03 , PHYSICS 1AA3 (or 1BA3 or 1BB3 or 1E03 ), 1CC3 , ISCI 1A24 A/B , SCIENCE 1E03; or permission of the instructor'
+    
+    requisites = ' COMMERCE 1AA3 (or 2AA3); ECON 1B03 ; one of MATH 1A03 , 1LS3 , 1M03, 1N03, 1X03 , 1ZA3 or 1Z04; registration in any Commerce, Engineering and Management, Honours Business Informatics, or Honours Actuarial and Financial Mathematics, or four or five-level non-Commerce program. Students in a four- or five-level non-Commerce program must have at least B- in one of ARTSSCI 2E03 , ECON 1B03 , ECON 2G03 , 2X03 .'
     
     """
     'CHEM 2PC3; or MATH 1B03 and CHEM 1AA3 and one of MATH 1AA3, 1LT3, 1XX3, 1ZB3; or MATH 1B03 and ISCI 1A24 A/B'

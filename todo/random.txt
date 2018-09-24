@@ -1,0 +1,15 @@
+BIOCHEM 2B03 and credit | registration in one of CHEMBIO 2OB3, CHEM 2BB3 or 2OB3, and
+['BIOCHEM 2B03', 'credit | registration in one of CHEMBIO 2OB3, CHEM 2BB3', '2OB3,', ... ]
+
+One of PSYCH 1F03 or 1X03 , and PSYCH 1XX3 , and
+['PSYCH 1F03', '1X03 ,', 'PSYCH 1XX3 ,', ... ]
+
+credit | registration in one of CHEMBIO 2OB3, CHEM 2BB3 or 2OB3
+
+---->
+
+credit | registration in one of CHEMBIO 2OB3, CHEM 2BB3, 2OB3
+
+r'credit | registration in one of [A-Z]{2,} [1-5][A-Z][A-Z0-9][0-9] [A/B]?'
+
+([A-Z]{2,})*
