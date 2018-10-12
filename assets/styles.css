@@ -1,0 +1,85 @@
+hr {
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.container-full {
+    position: relative;
+    margin-left: 20%;
+    margin-right: 20%;
+    height: 100vh;
+}
+
+.form-group {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    height: 70px;
+}
+
+.form-container {
+    margin: auto;
+}
+
+.form-control {
+    width: 90%;
+}
+
+.footer {
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+.row-marginless {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.btn-wrapper {
+    margin-left: 15px;
+    display: block;
+    overflow: hidden;
+    width: 8%;
+}
+
+#courseGraph {
+    margin: auto;
+    width: 95%;
+    height: 100%;
+    bottom: 70px;
+}
+
+#btnReset {
+    float: right;
+    margin: auto;
+    width: 100%;
+}
+
+@media screen and (max-width: 1440px) {
+    .container-full {
+        position: relative;
+        margin-left: 20px;
+        margin-right: 20px;
+        width: 100%;
+        height: 100vh;
+    }
+    
+    .form-group {
+        position: absolute;
+        bottom: 20px;
+        width: 100%;
+        height: 70px;
+    }
+
+    .form-container {
+        margin: auto;
+        width: 96%;
+    }
+    
+    #courseGraph {
+        margin: auto;
+        width: 95%;
+        height: 100%;
+        bottom: 70px;
+    }
+}

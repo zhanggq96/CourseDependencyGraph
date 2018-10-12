@@ -1,5 +1,4 @@
-Medical and Biological
-Biology and Genetics
+Important: Missing many courses in 176-177 and 179+ range.
 
 https://academiccalendars.romcmaster.ca/preview_course_nopop.php?catoid=32&coid=177311
 (small mistake  one of ENGTECH 3FE3 or 3MN3)
