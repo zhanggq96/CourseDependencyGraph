@@ -1,3 +1,11 @@
+
+var d_hash_subbranch = true;
+
+var key_course_color = 'rgb(255,182,193)';
+var reg_course_color = 'rgb(151,194,252)';
+var and_color = 'rgb(255,127,80)';
+var or_color = 'rgb(107,142,35)';
+
 let sc_courses, sc_name, sc_prerequisites, sc_type, sc_subbranches;
 switch(naming) {
     case 'compact':
@@ -46,8 +54,8 @@ class LogicalBranch {
     }
 
     toString(hash_subbranch) {
-        let subbranch_str = hash_subbranch ? JSON.stringify(this.subbranches).hashCode().toString() : 
-                                             JSON.stringify(this.subbranches);
+        let subbranch_str = hash_subbranch ? JSON.stringify(this.subbranches).hashCode().toString() 
+                                           : JSON.stringify(this.subbranches);
 
         let hash = '[' + this.node_type + ']_[' + 
                          this.courses.toString() + ']_[' + 
@@ -70,8 +78,6 @@ class Edge {
 }
 
 window.onload = function visualize(){
-    var hash_subbranches = true;
-
     var node_list = [];
     var edge_list = [];
     var course_table = {};  // hash that prevents duplicate courses
@@ -81,12 +87,12 @@ window.onload = function visualize(){
 
     function create_root(course_info, key_node){
         let node_id = ++node_counter;
-        course_name = course_info[sc_name];
+        let course_name = course_info[sc_name];
 
         if (course_name in course_table) {
             node_id = course_table[course_name];
         } else {
-            color = key_node ? 'rgb(255,182,193)' : 'rgb(151,194,252)';
+            color = key_node ? key_course_color : reg_course_color;
             node_list.push({id: node_id, label: course_name, color: color});
             course_table[course_name] = node_id
         }
@@ -101,11 +107,11 @@ window.onload = function visualize(){
         if (typeof branch === 'object') {
             let node_id = ++node_counter;
             let node_type = branch[sc_type];
-            let node_name;
+            let node_name, node_color;
 
             switch (node_type) {
-                case 'AND': and_counter++; node_name = 'AND' + and_counter.toString(); break;
-                case 'OR':  or_counter++; node_name = 'OR' + or_counter.toString(); break;
+                case 'AND': and_counter++; node_name = 'AND' + and_counter.toString(); node_color = and_color; break;
+                case 'OR':  or_counter++; node_name = 'OR' + or_counter.toString(); node_color = or_color; break;
                 default: node_name = 'UNKNOWN:'; return; 
                 // default possibilities: 
                 // -  empty prerequisites dict. In this case, 
@@ -116,15 +122,15 @@ window.onload = function visualize(){
                 //    leave here just as a safety measure.
             }
 
-            hash_node_name = node_name.includes('AND') ? 'AND' : 'OR';
-            hash_courses = typeof branch[sc_courses] === 'undefined' ? '{1}' : branch[sc_courses];
-            hash_subbranches = typeof branch[sc_subbranches] === 'undefined' ? '{2}' : branch[sc_subbranches];
-            branch_hash = new LogicalBranch(hash_node_name, hash_courses, hash_subbranches);
+            let node_name_hash = node_name.includes('AND') ? 'AND' : 'OR';
+            let courses_hash = typeof branch[sc_courses] === 'undefined' ? '{1}' : branch[sc_courses];
+            let subbranches_hash = typeof branch[sc_subbranches] === 'undefined' ? '{2}' : branch[sc_subbranches];
+            let branch_hash = new LogicalBranch(node_name_hash, courses_hash, subbranches_hash);
             // console.log(branch_hash.toString(true));
 
-            if (!(branch_hash.toString(hash_subbranches) in branch_table)) {
-                branch_table[branch_hash.toString(hash_subbranches)] = node_id;
-                node_list.push({id: node_id, label: node_name});
+            if (!(branch_hash.toString(d_hash_subbranch) in branch_table)) {
+                branch_table[branch_hash.toString(d_hash_subbranch)] = node_id;
+                node_list.push({id: node_id, label: node_name, color: node_color});
 
                 edge_hash = new Edge(parent_id, node_id);
                 if (!(edge_hash.toString() in edge_table)) {
@@ -136,7 +142,7 @@ window.onload = function visualize(){
                 }
                 
             } else {
-                node_id = branch_table[branch_hash.toString(hash_subbranches)];
+                node_id = branch_table[branch_hash.toString(d_hash_subbranch)];
 
                 edge_hash = new Edge(parent_id, node_id);
                 if (!(edge_hash.toString() in edge_table)) {
@@ -165,7 +171,7 @@ window.onload = function visualize(){
             if (!(course_name in course_table)) {
                 node_id = ++node_counter;
                 course_table[course_name] = node_id;
-                node_list.push({id: node_id, label: course_name});
+                node_list.push({id: node_id, label: course_name, color: reg_course_color});
                 
                 if (course_name in master_course_graph) {
                     create_root(master_course_graph[course_name], false);
