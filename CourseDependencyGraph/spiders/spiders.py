@@ -5,6 +5,7 @@ from CourseDependencyGraph.parsers.Parsers import RequisitesHTMLParser
 
 
 class AcademicCalenderSpider(scrapy.Spider):
+    # scrapy crawl mac_academic_calender_spider
     name = "mac_academic_calender_spider"
     repquisites = {
         'Antirequisite(s):',
@@ -36,7 +37,13 @@ class AcademicCalenderSpider(scrapy.Spider):
         # new 3dq5
         # course_code_init = course_code_end = 177737 + 5
 
-        # course_code_init = course_code_end = 178767
+        # course_code_init = course_code_end = 
+
+        # weird start/end points...
+        # course_code_init = 177000
+        # course_code_init = 180000 177125
+        course_code_init = 179408
+        course_code_end = 179409
         
         url_base = 'https://academiccalendars.romcmaster.ca/preview_course_nopop.php?catoid=32&coid='
         

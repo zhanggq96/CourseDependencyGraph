@@ -110,6 +110,32 @@ class RequisiteParseNode():
     def __repr__(self):
         return str(self.children)
 
+    def _generate_graph(self):
+        branch_dict = {}
+
+        if self.corequisite:
+            branch_dict['cr'] = 1
+        if self.recommended:
+            branch_dict['rc'] = 1
+        
+        courses = []
+        subbranches = []
+        for child in self.children:
+            subbranch_dict = child._generate_graph()
+            if isinstance(child, (RequisiteParseNodeOR, RequisiteParseNodeAND)):
+                if any(isinstance(subchild, (RequisiteParseNodeOR, RequisiteParseNodeAND, RequisiteParseNodeCourse))
+                    for subchild in child.children):
+                    subbranches.append(subbranch_dict)
+            elif isinstance(child, RequisiteParseNodeCourse):
+                courses.append(subbranch_dict)
+        
+        if courses:
+            branch_dict['c'] = courses
+        if subbranches:
+            branch_dict['s'] = subbranches
+
+        return branch_dict
+
 class RequisiteParseNodeOR(RequisiteParseNode):
     def __init__(self):
         super().__init__()
@@ -117,12 +143,29 @@ class RequisiteParseNodeOR(RequisiteParseNode):
     def __repr__(self):
         return 'OR:%s' % (str(self.children),)
 
+    def _generate_graph(self):
+        branch_dict = super()._generate_graph()
+        if not branch_dict:
+            # Avoid empty AND/OR nodes
+            return {}
+        branch_dict['t'] = 'OR'
+
+        return branch_dict
+
 class RequisiteParseNodeAND(RequisiteParseNode):
     def __init__(self):
         super().__init__()
 
     def __repr__(self):
         return 'AND%s:%s' % ('' if not self.recommended else 'REC', str(self.children),)
+
+    def _generate_graph(self):
+        branch_dict = super()._generate_graph()
+        if not branch_dict:
+            return {}
+        branch_dict['t'] = 'AND'
+
+        return branch_dict
 
 class RequisiteParseNodeCourse(RequisiteParseNode):
     def __init__(self, course):
@@ -154,6 +197,9 @@ class RequisiteParseNodeCourse(RequisiteParseNode):
         self.course = '%s %s' % (subject, self.course)
 
     def __repr__(self):
+        return str(self.course)
+    
+    def _generate_graph(self):
         return str(self.course)
 
 class RequisiteParseNodeNote(RequisiteParseNode):
@@ -274,14 +320,23 @@ class RequisiteParseTree():
         # 'both ': 'one of ',
         # 'Both ': 'one of ',
     }
-    def __init__(self, requisites, verbose=False, course_code=None):
+    def __init__(self, requisites, verbose=False, course_code=None, requisite_type='p'):
         self.requisites = requisites
         self.verbose = verbose
         self.course_code = course_code
+        self.requisite_type = requisite_type
 
     def __repr__(self):
         return str('ROOT:[%s]' % (self.root))
 
+    def generate_graph(self):
+        if not hasattr(self, 'requisite_type'):
+            self.requisite_type = 'p'
+        
+        course_graph = {
+            self.requisite_type: self.root._generate_graph()
+        }
+        return course_graph
     ### --------------------------------- Procesing Functions
 
     def find_prefix(self, requisite):
@@ -1326,6 +1381,8 @@ if __name__ == '__main__':
     
     requisites = ' COMMERCE 1AA3 (or 2AA3); ECON 1B03 ; one of MATH 1A03 , 1LS3 , 1M03, 1N03, 1X03 , 1ZA3 or 1Z04; registration in any Commerce, Engineering and Management, Honours Business Informatics, or Honours Actuarial and Financial Mathematics, or four or five-level non-Commerce program. Students in a four- or five-level non-Commerce program must have at least B- in one of ARTSSCI 2E03 , ECON 1B03 , ECON 2G03 , 2X03 .'
     
+
+    requisites = 'SOCWORK 2B06 or, both SOCWORK 2BB3 and SOCWORK 2CC3; and SOCWORK 2A06 A/B or, both SOCWORK 2C03 and SOCWORK 2D03; and permission of the Departmentv'
     """
     'CHEM 2PC3; or MATH 1B03 and CHEM 1AA3 and one of MATH 1AA3, 1LT3, 1XX3, 1ZB3; or MATH 1B03 and ISCI 1A24 A/B'
     contradicts with req for 

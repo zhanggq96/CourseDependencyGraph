@@ -16,7 +16,6 @@ class CoursedependencygraphPipeline(object):
 
         with open('json/processed_data_%s_%s.json' % (course_id, success_text), 'w') as f:
             f.write(json.dumps(course_info['json_data'], indent=4))
-            # f.write('from pipelines')
         
         course_info_pdata = pickle.dumps(course_info, pickle.HIGHEST_PROTOCOL)
 
@@ -36,7 +35,7 @@ class CoursedependencygraphPipeline(object):
 
         c.execute(
             '''
-            INSERT OR REPLACE INTO courses_v2(course_id, course_info, coruse_info_json)
+            INSERT OR IGNORE INTO courses_v2(course_id, course_info, coruse_info_json)
             VALUES (?, ?, ?)
             ''',
             (course_id, sqlite3.Binary(course_info_pdata), json.dumps(course_info['json_data'], indent=4))
