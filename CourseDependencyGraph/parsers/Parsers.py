@@ -117,10 +117,10 @@ class RequisitesHTMLParser():
         raw_text = self.clean_text(root.getText())
         # print(raw_text)
         requisites_dict_raw = self.split_on_requisites(raw_text)
-        with open('html_data.html', 'w') as f:
-            for requisite_type, requisite in requisites_dict_raw.items():
-                f.write(requisite_type)
-                f.write(requisite + '\n')
+        # with open('html_data.html', 'w') as f:
+        #     for requisite_type, requisite in requisites_dict_raw.items():
+        #         f.write(requisite_type)
+        #         f.write(requisite + '\n')
         
         # print(requisites_dict_raw)
         # requisite_types.insert(0, 'Default:')

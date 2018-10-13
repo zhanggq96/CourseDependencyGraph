@@ -25,8 +25,8 @@ class AcademicCalenderSpider(scrapy.Spider):
         # WOMENST 3FF3
         course_code_end = 178923
 
-        # course_code_init = 177776
-        # course_code_end = 177776
+        course_code_init = 177776
+        course_code_end = 177776
         # course_code_init = 177726
         # course_code_end = 177726
 
@@ -39,11 +39,11 @@ class AcademicCalenderSpider(scrapy.Spider):
 
         # course_code_init = course_code_end = 
 
-        # weird start/end points...
-        # course_code_init = 177000
-        # course_code_init = 180000 177125
-        course_code_init = 179408
-        course_code_end = 179409
+        # weird start/end points... 177125
+        course_code_init = 176000
+        course_code_end = 177000 
+        # course_code_init = 179408
+        # course_code_end = 179409
         
         url_base = 'https://academiccalendars.romcmaster.ca/preview_course_nopop.php?catoid=32&coid='
         

@@ -1,16 +1,21 @@
 import json
 import sqlite3
 import pickle
+from pathlib import Path
 
 from CourseDependencyGraph.parsers.requisite_parser import RequisiteParseTree
 
 
-def generate_json_file():
+def generate_json_file(js_file='assets/graph.js'):
+    path = Path(js_file)
+    if not path.is_file():
+        raise FileNotFoundError('FileNotFoundError: [Errno 2] No such file or directory:', js_file)
+
     conn = sqlite3.connect('db/course_db_example.db')
     c = conn.cursor()
 
     c.execute(
-        '''SELECT course_id, course_info, coruse_info_json FROM courses_v2'''
+        '''SELECT course_id, course_info, coruse_info_json FROM courses_v3'''
     )
 
     course_data = c.fetchall()
@@ -29,7 +34,7 @@ def generate_json_file():
         try:
             prereq_rpt = course_info['rpts']['Prerequisite(s):']
             prereq_graph = prereq_rpt.generate_graph()
-            if prereq_graph:
+            if prereq_graph: # Merge
                 course_graph = {**course_graph, **prereq_graph}
             print(course_graph)
 
@@ -39,7 +44,7 @@ def generate_json_file():
             pass
 
     master_course_graph = json.dumps(master_course_graph)
-    with open('mcg.js', 'w') as f:
+    with open(js_file, 'w') as f:
         f.write("var naming = 'compact';\n")
         f.write("var master_course_graph = ")
         f.write(master_course_graph)
