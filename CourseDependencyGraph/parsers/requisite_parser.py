@@ -311,10 +311,10 @@ class RequisiteParseTree():
         'CHEM2OA3': 'CHEM 2OA3',
         'CIVENG 3G03 or 3G04': 'CIVENG 3G03, CIVENG 3G04',
 
-        # changed unit courses
-        'ELECENG 3TP4 or 3TP3': 'ELECENG 3TP3',
-        'ELECENG 3TQ4 or 3TQ3': 'ELECENG 3TQ3',
-        'COMPENG 3DQ4 or 3DQ5': 'COMPENG 3DQ5',
+        # changed unit courses (assume eleceng)
+        '3TP4 or 3TP3': '3TP3',
+        '3TQ4 or 3TQ3': '3TQ3',
+        '3DQ4 or 3DQ5': '3DQ5',
         # 'A/Band': 'A/B and',
         # 'A/Bor': 'A/B or'
         # 'both ': 'one of ',
