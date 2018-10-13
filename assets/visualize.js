@@ -1,13 +1,13 @@
 
 var d_hash_subbranch = true;
 
-var key_course_color = 'rgb(255,182,193)';
-var reg_course_color = 'rgb(151,194,252)';
-var and_color = 'rgb(255,127,80)';
-var or_color = 'rgb(107,142,35)';
+var key_course_color = 'rgb(255,182,193)',
+    reg_course_color = 'rgb(151,194,252)',
+    and_color = 'rgb(255,127,80)',
+    or_color = 'rgb(107,142,35)';
 
 let sc_courses, sc_name, sc_prerequisites, sc_type, sc_subbranches;
-switch(naming) {
+switch (naming) {
     case 'compact':
         sc_courses = 'c';
         sc_name = 'n';
@@ -81,7 +81,7 @@ window.onload = function visualize(){
     var node_list = [];
     var edge_list = [];
     var course_table = {};  // hash that prevents duplicate courses
-    var branch_table = {};  // hash that prevents duplicates for AND/OR nodes
+    var branch_table = {};  // hash that prevents duplicate AND/OR nodes
     var edge_table = {};    // hash that prevents duplicate edges
     var or_counter = 0, and_counter = 0, node_counter = -1;
 
@@ -150,7 +150,7 @@ window.onload = function visualize(){
                     edge_table[edge_hash.toString()] = 1;
                     // console.log(edge_hash.toString());
                 }
-                return; // some node id's unused
+                return; // some node ids unused
             }
 
             
@@ -191,6 +191,9 @@ window.onload = function visualize(){
         course_reset = document.getElementById('btnReset');
     
     // https://stackoverflow.com/questions/26946235/pure-javascript-listen-to-input-value-change
+    // it would be better to do this when the user stops typing, 
+    // ex: both chem 2ob3 and chembio 2ob3 are recorded if 2ob3 is entered first and chem/chembio second.
+    // https://stackoverflow.com/questions/4220126/run-javascript-function-when-user-finishes-typing-instead-of-on-key-up
     course_input.addEventListener('input', update);
     course_reset.addEventListener('mousedown', reset);
 
