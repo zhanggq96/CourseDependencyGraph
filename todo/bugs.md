@@ -34,3 +34,7 @@ https://academiccalendars.romcmaster.ca/preview_course_nopop.php?catoid=32&coid=
 177607 missing the artsci course
 
 
+177951 - ELECENG 3TP3; One of ELECENG 3TQ4, 3TQ3 or STATS 3Y03; or ENGPHYS 3W04
+    Interpreting as one large "OR" on the outer expression due to the "OR" at end before engphys.
+177784 - Compsci 4TE3
+         SFWRENG 3MX3 same reason

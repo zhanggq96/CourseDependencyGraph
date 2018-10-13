@@ -1194,9 +1194,6 @@ class RequisiteParseTree():
                         RequisiteParseNodeCourse(course.strip()) if self.likely_is_course(course.strip()) else RequisiteParseNodeNote(course.strip())
                         for course in requisites_split_and_or
                     ]
-                    # for course in bracket_course_nodes:
-                    #     if not course.has_course_code():
-                    #         course = RequisiteParseNodeNote.from_unknown(course, assert_unknown=False)
                     
                     and_node = RequisiteParseNodeAND()
                     and_node.append(course_node)
@@ -1207,9 +1204,6 @@ class RequisiteParseTree():
                         RequisiteParseNodeCourse(course.strip()) if self.likely_is_course(course.strip()) else RequisiteParseNodeNote(course.strip())
                         for course in requisites_split_and_or
                     ]
-                    # for course in bracket_course_nodes:
-                    #     if not course.has_course_code():
-                    #         course = RequisiteParseNodeNote.from_unknown(course, assert_unknown=False)
 
                     or_node = RequisiteParseNodeOR()
                     or_node.append(course_node)
@@ -1217,6 +1211,7 @@ class RequisiteParseTree():
                     loop_reference_node = or_node
                 else:
                     raise ValueError('TODO: mixed contents in bracket for postprocess - operators:', AND_OR_list)
+                    
                     
             # print('loop_reference_node:', loop_reference_node)
             postprocess_reference_node.append(loop_reference_node)
@@ -1381,16 +1376,10 @@ if __name__ == '__main__':
     
     requisites = ' COMMERCE 1AA3 (or 2AA3); ECON 1B03 ; one of MATH 1A03 , 1LS3 , 1M03, 1N03, 1X03 , 1ZA3 or 1Z04; registration in any Commerce, Engineering and Management, Honours Business Informatics, or Honours Actuarial and Financial Mathematics, or four or five-level non-Commerce program. Students in a four- or five-level non-Commerce program must have at least B- in one of ARTSSCI 2E03 , ECON 1B03 , ECON 2G03 , 2X03 .'
     
-
     requisites = 'SOCWORK 2B06 or, both SOCWORK 2BB3 and SOCWORK 2CC3; and SOCWORK 2A06 A/B or, both SOCWORK 2C03 and SOCWORK 2D03; and permission of the Departmentv'
-    """
-    'CHEM 2PC3; or MATH 1B03 and CHEM 1AA3 and one of MATH 1AA3, 1LT3, 1XX3, 1ZB3; or MATH 1B03 and ISCI 1A24 A/B'
-    contradicts with req for 
-    'Credit or registration in one of BIOCHEM 2EE3, 3D03, HTHSCI 2D06 A/B or 2E03' ?
-    ^ its result is still technically correct. May stick with it
+    
+    # 4te3
+    requisites = 'One of MATH 2A03, 2M06 (or 2M03 and 2MM3), 2Q04, or 2ZZ3'
 
-    One of GEOG 2RC3, 2RU3, 2RW3, and registration in Level III or above. Completion of GEOG 1HA3 or 1HB3 is recommended.
-
-    """
     rpt = RequisiteParseTree(requisites, verbose=True)
     rpt.process()

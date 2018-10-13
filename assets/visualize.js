@@ -26,7 +26,7 @@ switch (naming) {
 
 // Strip/trim whitespace etc
 // https://stackoverflow.com/questions/1418050/string-strip-for-javascript
-if (typeof(String.prototype.trim) === "undefined") {
+if (typeof(String.prototype.trim) === 'undefined') {
     String.prototype.trim = function() {
         return String(this).replace(/^\s+|\s+$/g, '');
     };
