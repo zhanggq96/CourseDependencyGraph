@@ -38,3 +38,5 @@ https://academiccalendars.romcmaster.ca/preview_course_nopop.php?catoid=32&coid=
     Interpreting as one large "OR" on the outer expression due to the "OR" at end before engphys.
 177784 - Compsci 4TE3
          SFWRENG 3MX3 same reason
+
+178452 - PNB 2QQ3 A/B S: Last part 2xc3 is not being parsed correctly.
