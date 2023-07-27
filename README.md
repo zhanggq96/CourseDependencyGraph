@@ -1,6 +1,6 @@
-# Course Dependency Graph
+# McMaster University Course Dependency Graph
 
-https://maytide.github.io/CourseDependencyGraph/
+https://zhanggq96.github.io/CourseDependencyGraph/
 
 ## About: 
 
